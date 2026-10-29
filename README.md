@@ -97,10 +97,11 @@ The workflow publishes the image to GHCR. Make the `cicd-demo` container package
 Apply the manifests with:
 
 ```bash
-kubectl apply -f k8s/
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -k k8s/
 ```
 
-The deployment creates a namespace named `cicd-demo`, deploys two replicas, and exposes the application through a `LoadBalancer` service.
+Create the namespace once with an administrator identity. The deployment and service manifests are then applied by Kustomize in the `cicd-demo` namespace. The deployment runs two replicas and exposes the application through a `LoadBalancer` service. The CI identity can be scoped to that namespace rather than receiving cluster-wide write access.
 
 ## Ansible automation
 
