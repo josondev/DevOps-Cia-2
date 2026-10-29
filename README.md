@@ -90,7 +90,18 @@ Grant that identity only the required AKS deployment permissions. In the GitHub 
 | `AZURE_RESOURCE_GROUP` | Resource group containing the AKS cluster |
 | `AZURE_AKS_CLUSTER_NAME` | AKS cluster name |
 
-The workflow publishes the image to GHCR. Make the `cicd-demo` container package public after its first successful publication, or configure private image-pull credentials for AKS before deploying.
+The workflow publishes the image to the public GHCR package `ghcr.io/josondev/cicd-demo`, so AKS can pull it without a registry credential.
+
+## Live Azure deployment
+
+- GitHub repository: https://github.com/josondev/DevOps-Cia-2
+- AKS cluster: `devops-cia2-aks` in `new-devops-cia2-rg` (`centralindia`)
+- Application: http://4.187.190.194/
+- Health: http://4.187.190.194/health
+- Deployed version: http://4.187.190.194/api/version
+- Successful pipeline run: https://github.com/josondev/DevOps-Cia-2/actions/runs/40829244848
+
+The demo deployment uses one `Standard_D2s_v4` AKS node and two application replicas. AKS Free tier does not make the worker VM, disk, or public networking free; these resources consume Azure for Students credit while running.
 
 ## Kubernetes deployment
 
@@ -122,10 +133,10 @@ ansible-playbook -i ansible/inventory/hosts.ini ansible/playbook.yml
 ## Deployment checklist
 
 - GitHub repository configured with the correct workflow permissions.
-- Azure service principal or Managed Identity created for AKS access.
-- Cluster and resource group names stored in GitHub Secrets.
-- Container registry access granted to the deployment workflow.
-- Domain or ingress configured for production exposure.
+- Azure OIDC identity federated to the repository's `main` branch.
+- Cluster, resource group, and identity values stored as GitHub Actions variables.
+- GHCR package visibility set to public for unauthenticated AKS image pulls.
+- A custom domain and TLS ingress are not configured in this coursework demo.
 
 ## Why this design works
 

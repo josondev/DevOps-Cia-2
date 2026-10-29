@@ -12,6 +12,20 @@ The application is a lightweight Spring Boot service that exposes a simple homep
 
 The deployment target is Azure Kubernetes Service (AKS), which is a managed Kubernetes service in Microsoft Azure. The deployment workflow authenticates to Azure using GitHub OIDC federation, updates the cluster context, and applies the Kubernetes manifests. This avoids keeping a long-lived Azure client secret in GitHub. The service exposes the app through a Load Balancer so it can be accessed externally.
 
+```mermaid
+flowchart LR
+    Dev[Developer pushes to main] --> Repo[GitHub repository]
+    Repo --> Actions[GitHub Actions]
+    Actions --> Maven[Maven build and tests]
+    Maven --> Image[Docker image]
+    Image --> GHCR[GitHub Container Registry]
+    Actions -->|OIDC| Azure[Azure identity]
+    GHCR --> AKS[AKS deployment]
+    Azure --> AKS
+    AKS --> Service[LoadBalancer service]
+    Service --> Browser[Public HTTP endpoint]
+```
+
 ## 3. Tools selected and justification
 
 - GitHub: provides source control and CI trigger events.
@@ -55,6 +69,8 @@ The deployment architecture includes the following components:
 
 The application is deployed in the `cicd-demo` namespace. The deployment uses two replicas for resilience and declares readiness and liveness probes so Kubernetes only sends traffic to healthy containers. The manifest repository is versioned along with the app code, making the deployment state reproducible.
 
+The live cluster is `devops-cia2-aks` in the `new-devops-cia2-rg` resource group in Central India. It uses AKS Free control-plane tier and one `Standard_D2s_v4` worker node; the application runs two replicas on that node. The public service endpoint is `http://4.187.190.194/`. Although the control-plane tier is Free, the worker VM, disk, and public networking are billable and consume Azure for Students credit.
+
 ## 6. Implementation details
 
 The repository contains these key files:
@@ -87,11 +103,13 @@ The local validation command used during development was:
 mvn -B clean test
 ```
 
-This validates the Spring Boot application and confirms the CI workflow will pass on a clean environment.
+The test result was **3 tests, 0 failures, 0 errors**. The successful GitHub Actions run builds and publishes the image, authenticates to Azure using OIDC, and rolls out the deployment: [pipeline run](https://github.com/josondev/DevOps-Cia-2/actions/runs/40829244848).
+
+The deployed endpoint returned `{"status":"UP","service":"cicd-demo"}` at `/health` and `{"app":"cicd-demo","version":"1.0.1","environment":"prod"}` at `/api/version`. The Kubernetes Deployment reported two of two replicas ready.
 
 ## 8. Challenges and solutions
 
-One challenge in cloud-based deployments is granting the pipeline the correct permissions. In production, the workflow should use a service principal with least privilege or provider federation via GitHub OIDC. This avoids hardcoded credentials and reduces operational risk.
+The Azure for Students subscription rejected the initially selected `Standard_D2s_v3` VM size, so the cluster was created with the subscription-allowed `Standard_D2s_v4` size instead. GitHub's OIDC subject for this repository includes immutable owner and repository IDs; using the older name-only subject caused authentication to fail. The federated credential was updated to match the actual token subject, after which Azure login succeeded. The first AKS deployment also required installing `kubelogin` on the GitHub runner for non-admin Azure RBAC authentication.
 
 Another challenge is making Kubernetes deployment consistent. Using manifests stored in the repository and applying them in the GitHub workflow ensures the same configuration is used across environments and that updates are traceable.
 
@@ -102,24 +120,26 @@ Production systems should include the following measures:
 - short-lived GitHub OIDC tokens instead of stored Azure client secrets
 - secret management via GitHub Secrets, Azure Key Vault, or Kubernetes Secrets
 - image scanning and vulnerability analysis
-- private registry access for production deployments
+- private registry access for production deployments (the training image is public to allow AKS pulls without a stored token)
 - TLS/ingress configuration for public workloads
 - RBAC restrictions for cluster access
 - environment-specific configuration with configuration maps or secrets
 
-This project is a practical training implementation and does not include a live Azure subscription or actual cloud credentials. It is designed to be executable once the required Azure secrets and cluster names are added by the user or instructor.
+The demo uses GitHub OIDC federation and namespace-scoped AKS write access for the pipeline identity; no long-lived Azure client secret is stored in GitHub. The repository, image, and HTTP endpoint are public. The cluster is a single-node training setup without TLS or production high availability, and active Azure resources continue to incur compute and networking charges.
 
 ## 10. Live demonstration plan
 
 To demonstrate the workflow end-to-end, the following steps can be followed:
 
-1. Commit a change to the app or API response.
-2. Push to the `main` branch.
+1. Change the API version or response and commit it to `main`.
+2. Push the commit to GitHub.
 3. Observe the GitHub Actions workflow automatically trigger.
 4. Confirm Maven tests pass.
 5. Confirm the Docker image is pushed to the registry.
 6. Confirm the AKS deployment is updated.
-7. Visit the service endpoint in a browser to see the new change.
+7. Visit `http://4.187.190.194/api/version` to see the new version and `prod` profile.
+
+For the completed demonstration, commit `5493557` changed the application version to `1.0.1`. Pipeline run [40829244848](https://github.com/josondev/DevOps-Cia-2/actions/runs/40829244848) passed, published the image, and deployed it automatically.
 
 This proves that a code change can pass through the whole pipeline and appear in the running application automatically.
 
