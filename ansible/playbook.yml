@@ -1,0 +1,20 @@
+---
+- name: Deploy the Java CI/CD app to Kubernetes
+  hosts: aks
+  gather_facts: false
+  vars:
+    namespace: cicd-demo
+    image: ghcr.io/your-org/cicd-demo:latest
+  tasks:
+    - name: Ensure target namespace exists
+      ansible.builtin.command: kubectl create namespace {{ namespace }} --dry-run=client -o yaml | kubectl apply -f -
+      changed_when: false
+
+    - name: Apply Kubernetes manifests
+      ansible.builtin.command: kubectl apply -f ../k8s/
+      register: deploy_output
+      changed_when: true
+
+    - name: Show deployment summary
+      ansible.builtin.debug:
+        var: deploy_output.stdout_lines
