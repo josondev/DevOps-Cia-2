@@ -12,7 +12,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>cicd-demo</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>cicd-demo</name>
     <description>End-to-end CI/CD demo application</description>
 

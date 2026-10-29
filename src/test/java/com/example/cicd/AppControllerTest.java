@@ -36,6 +36,7 @@ class AppControllerTest {
         mockMvc.perform(get("/api/version"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.app").value("cicd-demo"))
-                .andExpect(jsonPath("$.version").value("1.0.0"));
+                .andExpect(jsonPath("$.version").value("1.0.1"))
+                .andExpect(jsonPath("$.environment").value("development"));
     }
 }

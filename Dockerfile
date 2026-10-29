@@ -9,7 +9,7 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-COPY --from=build /workspace/target/cicd-demo-1.0.0.jar /app/app.jar
+COPY --from=build /workspace/target/cicd-demo-1.0.1.jar /app/app.jar
 
 EXPOSE 8080
 

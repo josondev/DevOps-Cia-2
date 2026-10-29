@@ -2,11 +2,18 @@ package com.example.cicd;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class AppController {
+
+    private final String environment;
+
+    public AppController(@Value("${spring.profiles.active:development}") String environment) {
+        this.environment = environment;
+    }
 
     @GetMapping("/")
     public Map<String, String> home() {
@@ -26,7 +33,7 @@ public class AppController {
     public Map<String, String> version() {
         return Map.of(
                 "app", "cicd-demo",
-                "version", "1.0.0",
-                "environment", "development");
+                "version", "1.0.1",
+                "environment", environment);
     }
 }
