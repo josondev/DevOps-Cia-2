@@ -77,7 +77,7 @@ The deployment files are in the `k8s/` folder.
 The deployment job uses GitHub OIDC federation; it does not require a stored Azure client secret. Configure an Entra application/service principal with a federated credential whose subject is:
 
 ```text
-repo:josondev/DevOps-Cia-2:ref:refs/heads/main
+repo:josondev@163281456/DevOps-Cia-2@1438010085:ref:refs/heads/main
 ```
 
 Grant that identity only the required AKS deployment permissions. In the GitHub repository, add these Actions **variables**:
