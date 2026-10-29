@@ -72,6 +72,26 @@ The GitHub Actions workflow performs the following stages:
 
 The deployment files are in the `k8s/` folder.
 
+### GitHub and Azure configuration
+
+The deployment job uses GitHub OIDC federation; it does not require a stored Azure client secret. Configure an Entra application/service principal with a federated credential whose subject is:
+
+```text
+repo:josondev/DevOps-Cia-2:ref:refs/heads/main
+```
+
+Grant that identity only the required AKS deployment permissions. In the GitHub repository, add these Actions **variables**:
+
+| Variable | Value |
+|---|---|
+| `AZURE_CLIENT_ID` | Entra application (client) ID |
+| `AZURE_TENANT_ID` | Azure tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
+| `AZURE_RESOURCE_GROUP` | Resource group containing the AKS cluster |
+| `AZURE_AKS_CLUSTER_NAME` | AKS cluster name |
+
+The workflow publishes the image to GHCR. Make the `cicd-demo` container package public after its first successful publication, or configure private image-pull credentials for AKS before deploying.
+
 ## Kubernetes deployment
 
 Apply the manifests with:

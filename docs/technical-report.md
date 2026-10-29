@@ -10,7 +10,7 @@ The project requirement is to create a real CI/CD pipeline for a Java web applic
 
 The application is a lightweight Spring Boot service that exposes a simple homepage, health endpoint, and version endpoint. The pipeline is implemented with GitHub Actions and runs when code is pushed to the main branch. The toolchain includes Java 17 for compilation, Maven for dependency management and test execution, Docker for containerization, and Kubernetes for orchestration.
 
-The deployment target is Azure Kubernetes Service (AKS), which is a managed Kubernetes service in Microsoft Azure. The deployment workflow authenticates to Azure using a service principal or federated credential, updates the cluster context, and applies the Kubernetes manifests. The service exposes the app through a Load Balancer so it can be accessed externally.
+The deployment target is Azure Kubernetes Service (AKS), which is a managed Kubernetes service in Microsoft Azure. The deployment workflow authenticates to Azure using GitHub OIDC federation, updates the cluster context, and applies the Kubernetes manifests. This avoids keeping a long-lived Azure client secret in GitHub. The service exposes the app through a Load Balancer so it can be accessed externally.
 
 ## 3. Tools selected and justification
 
@@ -99,6 +99,7 @@ Another challenge is making Kubernetes deployment consistent. Using manifests st
 
 Production systems should include the following measures:
 
+- short-lived GitHub OIDC tokens instead of stored Azure client secrets
 - secret management via GitHub Secrets, Azure Key Vault, or Kubernetes Secrets
 - image scanning and vulnerability analysis
 - private registry access for production deployments
